@@ -16,7 +16,7 @@ class NKException(Exception):
 class NKDatasetException(NKException):
 
     def __repr__(self):
-        return "<NKDatasetException(%s:%s)" % (self,
+        return "<NKDatasetException(%s:%s)>" % (self,
                                                getattr(self, 'message', None))
 
 
@@ -81,7 +81,7 @@ class NKDataset(object):
 
     def _get(self, path, params={}, retry=True):
         response = self._session.get(self.host + '/' + self.name + path,
-                params=params)
+                                     params=params)
         if not response.ok:
             #print [response.status_code, response.content]
             del self._session_obj
@@ -90,13 +90,13 @@ class NKDataset(object):
     def _post(self, path, data={}, retry=True):
         data = json.dumps(data)
         response = self._session.post(self.host + '/' + self.name + path,
-                allow_redirects=True,
-                data=data)
+                                      allow_redirects=True,
+                                      data=data)
         if not response.ok:
             #print [response.status_code, response.content]
             del self._session_obj
-        return response.status_code, json.loads(response.content) \
-            if response.content else {}
+        return (response.status_code,
+                json.loads(response.content) if response.content else {})
 
     def _fetch(self):
         code, data = self._get('')
@@ -116,8 +116,8 @@ class NKDataset(object):
         return NKValue(self, val)
 
     def add_value(self, value, data={}):
-        code, val = self._post('/values', 
-                data={'value': value, 'data': data})
+        code, val = self._post('/values',
+                               data={'value': value, 'data': data})
         if code == 400:
             raise NKException(val)
         return NKValue(self, val)
@@ -125,7 +125,7 @@ class NKDataset(object):
     def ensure_value(self, value, data={}):
         try:
             return self.get_value(value=value)
-        except NKException, ex:
+        except NKException:
             return self.add_value(value=value, data=data)
 
     def values(self):
@@ -133,11 +133,11 @@ class NKDataset(object):
         return [NKValue(self, v) for v in vals]
 
     def get_link(self, id=None, key=None):
-        assert id or value, "Need to give an ID or a ket!"
+        assert id or key, "Need to give an ID or a key!"
         if id is not None:
             code, val = self._get('/links/%s' % id)
         else:
-            code, val = self._get('/link', params={'key': value})
+            code, val = self._get('/link', params={'key': key})
         if code != 200:
             raise NKException(val)
         return NKLink(self, val)
@@ -147,9 +147,9 @@ class NKDataset(object):
         return [NKLink(self, v) for v in vals]
 
     def lookup(self, key, context={}, readonly=False):
-        code, val = self._post('/lookup', 
-                data={'key': key,
-                      'readonly': readonly})
+        code, val = self._post('/lookup',
+                               data={'key': key,
+                                     'readonly': readonly})
         if code == 404:
             raise NKNoMatch(val)
         elif code == 418:
@@ -158,17 +158,16 @@ class NKDataset(object):
             return NKValue(self, val.get('value'))
 
     def match(self, link_id, value_id):
-        code, val = self._post('/links/%s/match' % link_id, 
-                        data={'choice': value_id,
-                              'value': ''})
+        code, val = self._post('/links/%s/match' % link_id,
+                               data={'choice': value_id,
+                                     'value': ''})
         if code != 200:
             raise NKException(val)
         return None
 
     def __repr__(self):
-        return "<NKDataset(%s)" % self.name
+        return "<NKDataset(%s)>" % self.name
 
 
 if __name__ == "__main__":
     ds = NKDataset('offenesparlament', 'http://localhost:5000')
-
