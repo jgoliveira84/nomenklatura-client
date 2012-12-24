@@ -76,7 +76,8 @@ class NKDataset(object):
                        'Content-Type': 'application/json'}
             if self.api_key is not None:
                 headers['Authorization'] = self.api_key
-            self._session_obj = requests.session(headers=headers)
+            self._session_obj = requests.Session()
+            self._session_obj.headers.update(headers)
         return self._session_obj
 
     def _get(self, path, params={}, retry=True):
@@ -85,7 +86,7 @@ class NKDataset(object):
         if not response.ok:
             #print [response.status_code, response.content]
             del self._session_obj
-        return response.status_code, response.json
+        return response.status_code, response.json()
 
     def _post(self, path, data={}, retry=True):
         data = json.dumps(data)
