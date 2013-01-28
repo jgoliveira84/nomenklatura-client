@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='nkclient',
-    version='0.1',
+    name='pynomenklatura',
+    version='0.2',
     description="Client library for nomenklatura, make record linkages on the web.",
     long_description='',
     classifiers=[
