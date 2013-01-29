@@ -2,6 +2,12 @@ import requests
 import json
 
 
+class NKObject(object):
+ 
+ def __init__(self,data):
+  for k,v in data.items():
+    setattr(self,k,v)
+
 def apply_attrs(obj, data):
     for k, v in data.items():
         setattr(obj, k, v)
@@ -34,32 +40,32 @@ class NKInvalid(NKException):
                                        self.key)
 
 
-class NKValue(object):
+class Value(NKObject):
 
     def __init__(self, dataset, data):
         self._dataset = dataset
         apply_attrs(self, data)
 
     def __repr__(self):
-        return "<NKValue(%s:%s:%s)>" % (self._dataset.name,
+        return "<Value(%s:%s:%s)>" % (self._dataset.name,
                                         self.id, self.value)
 
 
-class NKLink(object):
+class Link(NKObject):
 
     INVALID = "INVALID"
     NEW = "NEW"
 
     def __init__(self, dataset, data):
         self._dataset = dataset
-        apply_attrs(self, data)
+        super(NKLink,self).__init__(data)
 
     def __repr__(self):
-        return "<NKLink(%s:%s:%s:%s)>" % (self._dataset.name,
+        return "<Link(%s:%s:%s:%s)>" % (self._dataset.name,
                                        self.id, self.key, self.is_matched)
 
 
-class NKDataset(object):
+class Dataset(object):
 
     def __init__(self, dataset,
                  host='http://nomenklatura.okfnlabs.org',
@@ -74,7 +80,7 @@ class NKDataset(object):
         if not hasattr(self, '_session_obj'):
             headers = {'Accept': 'application/json',
                        'Content-Type': 'application/json'}
-            if self.api_key is not None:
+            if self.api_key:
                 headers['Authorization'] = self.api_key
             self._session_obj = requests.Session()
             self._session_obj.headers.update(headers)
@@ -101,8 +107,8 @@ class NKDataset(object):
 
     def _fetch(self):
         code, data = self._get('')
-        if code != 200 or data is None:
-            data = data if data is not None else {'code': code}
+        if not (code == 200 and data):
+            data = data or {'code': code}
             raise NKDatasetException(data)
         apply_attrs(self, data)
 
@@ -114,14 +120,14 @@ class NKDataset(object):
             code, val = self._get('/value', params={'value': value})
         if code != 200:
             raise NKException(val or {})
-        return NKValue(self, val)
+        return Value(self, val)
 
     def add_value(self, value, data={}):
         code, val = self._post('/values',
                                data={'value': value, 'data': data})
         if code == 400:
             raise NKException(val)
-        return NKValue(self, val)
+        return Value(self, val)
 
     def ensure_value(self, value, data={}):
         try:
@@ -131,7 +137,7 @@ class NKDataset(object):
 
     def values(self):
         code, vals = self._get('/values')
-        return [NKValue(self, v) for v in vals]
+        return [Value(self, v) for v in vals]
 
     def get_link(self, id=None, key=None):
         assert id or key, "Need to give an ID or a key!"
@@ -141,11 +147,11 @@ class NKDataset(object):
             code, val = self._get('/link', params={'key': key})
         if code != 200:
             raise NKException(val)
-        return NKLink(self, val)
+        return Link(self, val)
 
     def links(self):
         code, vals = self._get('/links')
-        return [NKLink(self, v) for v in vals]
+        return [Link(self, v) for v in vals]
 
     def lookup(self, key, context={}, readonly=False):
         code, val = self._post('/lookup',
@@ -156,7 +162,7 @@ class NKDataset(object):
         elif code == 418:
             raise NKInvalid(val)
         else:
-            return NKValue(self, val.get('value'))
+            return Value(self, val.get('value'))
 
     def match(self, link_id, value_id):
         code, val = self._post('/links/%s/match' % link_id,
@@ -167,8 +173,8 @@ class NKDataset(object):
         return None
 
     def __repr__(self):
-        return "<NKDataset(%s)>" % self.name
+        return "<Dataset(%s)>" % self.name
 
 
 if __name__ == "__main__":
-    ds = NKDataset('offenesparlament', 'http://localhost:5000')
+    ds = Dataset('offenesparlament', 'http://localhost:5000')
