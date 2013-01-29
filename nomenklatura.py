@@ -10,6 +10,9 @@ class NKObject(object):
       setattr(self,k,v) 
       # TODO - beautify this with accessor methods (__getattribute__...)
 
+  def __str__(self):
+    return self.__repr__()
+
   class NKException(Exception):
 
     def __init__(self, data):
@@ -211,10 +214,7 @@ class Dataset(NKObject):
       return None
 
   def __repr__(self):
-      return "<Dataset(%s)>" % self.name
-
-    def __str__(self):
-      return self.__repr__()
+    return "<Dataset(%s)>" % self.name
 
 if __name__ == "__main__":
   ds = Dataset('offenesparlament')
