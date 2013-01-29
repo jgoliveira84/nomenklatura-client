@@ -6,19 +6,21 @@ class NKObject(object):
   """ The basic Object we'll be inheriting from """
 
   def __init__(self,data):
-    for k,v in data.items():
-      setattr(self,k,v) 
-      # TODO - beautify this with accessor methods (__getattribute__...)
+    self.__data__=data
+  
+  def __getattr__(self,k):
+    return self.__data__[k]
 
   def __str__(self):
     return self.__repr__()
 
   class NKException(Exception):
 
-    def __init__(self, data):
-      for k, v in data.items():
-        setattr(self, k, v)
-        # TODO - same here - beautify
+    def __init__(self,data):
+      self.__data__=data
+  
+    def __getattr__(self,k):
+      return self.__data__[k]
 
     def __repr__(self):
       return "<NKException>"
@@ -58,6 +60,8 @@ class Value(NKObject):
     return "<Value(%s:%s:%s)>" % (self._dataset.name,
                                       self.id, self.value)
 
+  def __str__(self):
+    return self.value
 
 class Link(NKObject):
 
