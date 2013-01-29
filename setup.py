@@ -12,7 +12,7 @@ setup(
     keywords='data mapping identity linkage record',
     author='Open Knowledge Foundation',
     author_email='info@okfn.org',
-    url='http://okfn.org',
+    url='http://github.com/okfn/nomenklatura-client',
     license='AGPLv3',
     py_modules=['nomenklatura'],
     zip_safe=False,
