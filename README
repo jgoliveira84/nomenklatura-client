@@ -8,7 +8,7 @@ service. See the API docs for a usage example.
 usage::
 
    import nomenklatura
-   dataset=nomenklatura.Dataset("xxx")
+   dataset=nomenklatura.Dataset("offenesparlament")
    value=dataset.lookup("Angela Merkel")
    print value
 
