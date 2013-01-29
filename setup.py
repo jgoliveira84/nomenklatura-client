@@ -1,10 +1,12 @@
-from setuptools import setup, find_packages
+from distutils.core import setup
+
+f=open("README")
 
 setup(
     name='pynomenklatura',
     version='0.2',
     description="Client library for nomenklatura, make record linkages on the web.",
-    long_description='',
+    long_description="\n".join(f),
     classifiers=[
         ],
     keywords='data mapping identity linkage record',
@@ -12,9 +14,7 @@ setup(
     author_email='info@okfn.org',
     url='http://okfn.org',
     license='AGPLv3',
-    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-    namespace_packages=[],
-    include_package_data=False,
+    py_modules=['nomenklatura'],
     zip_safe=False,
     install_requires=[
         "requests>=0.12"
