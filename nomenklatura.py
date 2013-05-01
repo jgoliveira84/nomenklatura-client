@@ -14,67 +14,58 @@ class NKObject(object):
   def __str__(self):
     return self.__repr__()
 
-  class NKException(Exception):
+class NKException(Exception, NKObject):
+    pass
 
-    def __init__(self,data):
-      self.__data__=data
-  
-    def __getattr__(self,k):
-      return self.__data__[k]
-
-    def __repr__(self):
-      return "<NKException>"
-
-    def __str__(self):
-      return self.__repr__()
-
-
-  class DatasetException(NKException):
+class DatasetException(NKException):
 
     def __repr__(self):
         return "<DatasetException(%s:%s)>" % (self,
-                                               getattr(self, 'message', None))
+            getattr(self, 'message', None))
 
 
-  class NoMatch(NKException):
-
-    def __repr__(self):
-      return "<NoMatch(%s:%s)>" % (self.dataset,
-                                       self.key)
-
-
-  class Invalid(NKException):
+class NoMatch(NKException):
 
     def __repr__(self):
-      return "<Invalid(%s:%s)>" % (self.dataset,
-                                     self.key)
+      return "<NoMatch(%s:%s)>" % (self.dataset, self.name)
 
 
-class Value(NKObject):
+class Invalid(NKException):
+
+    def __repr__(self):
+      return "<Invalid(%s:%s)>" % (self.dataset, self.name)
+
+NKObject.DatasetException = DatasetException
+NKObject.NoMatch = NoMatch
+NKObject.Invalid = Invalid
+
+
+class Entity(NKObject):
 
   def __init__(self, dataset, data):
     self._dataset = dataset
-    super(Value,self).__init__(data)
+    super(Entity, self).__init__(data)
 
   def __repr__(self):
     return "<Value(%s:%s:%s)>" % (self._dataset.name,
-                                      self.id, self.value)
+                                  self.id, self.name)
 
   def __str__(self):
-    return self.value
+    return self.name
 
-class Link(NKObject):
+
+class Alias(NKObject):
 
   INVALID = "INVALID"
   NEW = "NEW"
 
   def __init__(self, dataset, data):
       self._dataset = dataset
-      super(Link,self).__init__(data)
+      super(Alias, self).__init__(data)
 
   def __repr__(self):
       return "<Link(%s:%s:%s:%s)>" % (self._dataset.name,
-                                     self.id, self.key, self.is_matched)
+            self.id, self.name, self.is_matched)
 
 
 class Dataset(NKObject):
@@ -91,9 +82,7 @@ class Dataset(NKObject):
 
   Methods defined here:
 
-  get_value(id=None,value=None) """
-
-
+    get_entity(id=None,name=None) """
 
   def __init__(self, dataset,
                host='http://nomenklatura.okfnlabs.org',
@@ -140,79 +129,76 @@ class Dataset(NKObject):
           raise self.DatasetException(data)
       super(Dataset,self).__init__(data)    
 
-  def get_value(self, id=None, value=None):
-    """ get a value from the dataset 
-        get_value(id=23) -> get value with id 23
-        get_value(value="FOO") -> get value with value "FOO"
+  def get_value(self, id=None, name=None):
+    """ get an entity from the dataset 
+        get_entity(id=23) -> get entity with id 23
+        get_entity(name="FOO") -> get entity with value "FOO"
 
         if neither id nor value are specified - raises a Value
         Error
     """
 
-    if not (id or value):
-      raise ValueError("Need to give an ID or a value")
+    if not (id or name):
+      raise ValueError("Need to give an ID or a name")
     if id is not None:
-        code, val = self._get('/values/%s' % id)
+        code, val = self._get('/entities/%s' % id)
     else:
-        code, val = self._get('/value', params={'value': value})
+        code, val = self._get('/entities', params={'name': name})
     if code != 200:
         raise self.NKException(val or {})
-    return Value(self, val)
+    return Entity(self, val)
 
-  def add_value(self, value, data={}):
-    """ Add a value to the dataset """
-    code, val = self._post('/values',
-                           data={'value': value, 'data': data})
+  def add_entity(self, name, data={}):
+    """ Add an entity to the dataset """
+    code, val = self._post('/entities',
+        data={'name': name, 'data': data})
     if code == 400:
         raise self.NKException(val)
     return Value(self, val)
 
-  def ensure_value(self, value, data={}):
-    """ Makes sure you have a value to work with:
-      ensure_value(value,data) ->
-        Returns a Value if it exists - adds the value otherwise
-        """
+  def ensure_entity(self, name, data={}):
+    """ Makes sure you have an entity to work with:
+    ensure_entity(name, data) ->
+        Returns an Entity if it exists - adds the entity otherwise"""
     try:
         return self.get_value(value=value)
     except self.NKException:
         return self.add_value(value=value, data=data)
 
-  def values(self):
-    """ Returns a generator of all Values in the dataset """
-    code, vals = self._get('/values')
-    return (Value(self, v) for v in vals) 
+  def entities(self):
+    """ Returns a generator of all entities in the dataset """
+    code, vals = self._get('/entities')
+    return (Entity(self, v) for v in vals) 
 
-  def get_link(self, id=None, key=None):
-      if not (id or key):
-        raise ValueError("Need to give an ID or a Key")
+  def get_alias(self, id=None, name=None):
+      if not (id or name):
+        raise ValueError("Need to give an ID or a name")
       if id:
-          code, val = self._get('/links/%s' % id)
+          code, val = self._get('/aliases/%s' % id)
       else:
-          code, val = self._get('/link', params={'key': key})
+          code, val = self._get('/aliases', params={'name': name})
       if code != 200:
           raise self.NKException(val)
-      return Link(self, val)
+      return Alias(self, val)
 
-  def links(self):
-    """ Returns a generator of all links in the dataset """
-    code, vals = self._get('/links')
-    return (Link(self, v) for v in vals)
+  def aliases(self):
+    """ Returns a generator of all aliases in the dataset """
+    code, vals = self._get('/aliases')
+    return (Alias(self, v) for v in vals)
 
-  def lookup(self, key, context={}, readonly=False):
+  def lookup(self, name, context={}, readonly=False):
       code, val = self._post('/lookup',
-                             data={'key': key,
-                                   'readonly': readonly})
+            data={'name': name, 'readonly': readonly})
       if code == 404:
           raise self.NoMatch(val)
       elif code == 418:
           raise self.Invalid(val)
       else:
-          return Value(self, val.get('value'))
+          return Entity(self, val.get('entity'))
 
-  def match(self, link_id, value_id):
-      code, val = self._post('/links/%s/match' % link_id,
-                             data={'choice': value_id,
-                                   'value': ''})
+  def match(self, alias_id, entity_id):
+      code, val = self._post('/aliases/%s/match' % alias_id,
+        data={'choice': entity_id, 'name': ''})
       if code != 200:
           raise self.NKException(val)
       return None

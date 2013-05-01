@@ -9,6 +9,6 @@ usage::
 
    import nomenklatura
    dataset=nomenklatura.Dataset("offenesparlament")
-   value=dataset.lookup("Angela Merkel")
-   print value
+   entity=dataset.lookup("Angela Merkel")
+   print entity
 
