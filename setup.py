@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 f=open("README.md")
 
@@ -17,7 +17,7 @@ setup(
     py_modules=['nomenklatura'],
     zip_safe=False,
     install_requires=[
-        "requests>=0.12"
+        "requests>=1.2"
     ],
     tests_require=[],
     entry_points=\
