@@ -4,7 +4,7 @@ f=open("README.md")
 
 setup(
     name='pynomenklatura',
-    version='0.2',
+    version='0.3',
     description="Client library for nomenklatura, make record linkages on the web.",
     long_description="\n".join(f),
     classifiers=[
