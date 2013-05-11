@@ -5,14 +5,15 @@ import json
 class NKObject(object):
   """ The basic Object we'll be inheriting from """
 
-  def __init__(self,data):
-    self.__data__=data
-  
-  def __getattr__(self,k):
-    return self.__data__[k]
+  def __init__(self, data):
+      self.__data__ = data
+
+  def __getattr__(self, k):
+      return self.__data__[k]
 
   def __str__(self):
-    return self.__repr__()
+      return self.__repr__()
+
 
 class NKException(Exception, NKObject):
     pass
@@ -27,13 +28,14 @@ class DatasetException(NKException):
 class NoMatch(NKException):
 
     def __repr__(self):
-      return "<NoMatch(%s:%s)>" % (self.dataset, self.name)
+        return "<NoMatch(%s:%s)>" % (self.dataset, self.name)
 
 
 class Invalid(NKException):
 
     def __repr__(self):
-      return "<Invalid(%s:%s)>" % (self.dataset, self.name)
+        return "<Invalid(%s:%s)>" % (self.dataset, self.name)
+
 
 NKObject.DatasetException = DatasetException
 NKObject.NoMatch = NoMatch
@@ -69,13 +71,13 @@ class Alias(NKObject):
 
 
 class Dataset(NKObject):
-  """ A Nomenklatura dataset. Helps you to access values and links from
+  """ A Nomenklatura dataset. Helps you to access entities and aliases from
   Nomenklatura...
-  
+
   Dataset(name,host="http://nomenklatura.okfnlabs.org",api_key=None)
 
   usage:
-    
+
     from nomenklatura import dataset
     ds=Dataset("offenesparlament")
     ds.lookup("Angela Merkel")
@@ -129,7 +131,7 @@ class Dataset(NKObject):
           raise self.DatasetException(data)
       super(Dataset,self).__init__(data)    
 
-  def get_value(self, id=None, name=None):
+  def get_entity(self, id=None, name=None):
     """ get an entity from the dataset 
         get_entity(id=23) -> get entity with id 23
         get_entity(name="FOO") -> get entity with value "FOO"
@@ -166,9 +168,9 @@ class Dataset(NKObject):
         return self.add_value(value=value, data=data)
 
   def entities(self):
-    """ Returns a generator of all entities in the dataset """
-    code, vals = self._get('/entities')
-    return (Entity(self, v) for v in vals) 
+      """ Returns a generator of all entities in the dataset """
+      code, vals = self._get('/entities')
+      return (Entity(self, v) for v in vals) 
 
   def get_alias(self, id=None, name=None):
       if not (id or name):
@@ -182,9 +184,9 @@ class Dataset(NKObject):
       return Alias(self, val)
 
   def aliases(self):
-    """ Returns a generator of all aliases in the dataset """
-    code, vals = self._get('/aliases')
-    return (Alias(self, v) for v in vals)
+      """ Returns a generator of all aliases in the dataset """
+      code, vals = self._get('/aliases')
+      return (Alias(self, v) for v in vals)
 
   def lookup(self, name, context={}, readonly=False):
       code, val = self._post('/lookup',
@@ -198,13 +200,13 @@ class Dataset(NKObject):
 
   def match(self, alias_id, entity_id):
       code, val = self._post('/aliases/%s/match' % alias_id,
-        data={'choice': entity_id, 'name': ''})
+              data={'choice': entity_id, 'name': ''})
       if code != 200:
           raise self.NKException(val)
       return None
 
   def __repr__(self):
-    return "<Dataset(%s)>" % self.name
+      return "<Dataset(%s)>" % self.name
 
 if __name__ == "__main__":
-  ds = Dataset('offenesparlament')
+    ds = Dataset('offenesparlament')

@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-f=open("README")
+f=open("README.md")
 
 setup(
     name='pynomenklatura',
