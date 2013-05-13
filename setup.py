@@ -1,12 +1,11 @@
 from setuptools import setup, find_packages
 
-f=open("README.md")
 
 setup(
     name='pynomenklatura',
-    version='0.3',
+    version='0.3.1',
     description="Client library for nomenklatura, make record linkages on the web.",
-    long_description="\n".join(f),
+    long_description="",
     classifiers=[
         ],
     keywords='data mapping identity linkage record',
