@@ -16,7 +16,9 @@ class NKObject(object):
 
 
 class NKException(Exception, NKObject):
-    pass
+    def __init__(self, data):
+        NKObject.__init__(self, data)
+
 
 class DatasetException(NKException):
 
